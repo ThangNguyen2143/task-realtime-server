@@ -3,6 +3,8 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
+  HttpStatus,
   Param,
   Patch,
   Post,
@@ -15,6 +17,7 @@ import { UpdateStatusTaskDto } from './dto/update-status.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { UseGuards } from '@nestjs/common';
 import { JwtGuard } from 'src/auth/guards/jwt.guard';
+import ResponseHelper from 'src/helper/ResponseModel';
 
 @Controller('/api/task')
 @ApiBearerAuth('access-token')
@@ -23,37 +26,77 @@ export class TaskController {
   constructor(private readonly taskService: TaskService) {}
 
   @Post()
-  create(@Body() createTaskDto: CreateTaskDto, @Req() req: any) {
-    return this.taskService.create(createTaskDto, req.user.userId);
+  async create(@Body() createTaskDto: CreateTaskDto, @Req() req: any) {
+    try {
+      const res = await this.taskService.create(createTaskDto, req.user.userId);
+      return ResponseHelper.ResponseSuccess(res);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   // Lấy tất cả task theo workspace
   @Get('workspace/:workspaceId')
-  findAll(@Param('workspaceId') workspaceId: string, @Req() req: any) {
-    return this.taskService.findAll(workspaceId, req.user.userId);
+  async findAll(@Param('workspaceId') workspaceId: string, @Req() req: any) {
+    try {
+      const res = await this.taskService.findAll(workspaceId, req.user.userId);
+      return ResponseHelper.ResponseSuccess(res);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string, @Req() req: any) {
-    return this.taskService.findOne(id, req.user.userId);
+  async findOne(@Param('id') id: string, @Req() req: any) {
+    try {
+      const res = await this.taskService.findOne(id, req.user.userId);
+      return ResponseHelper.ResponseSuccess(res);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Patch(':id')
-  update(
+  async update(
     @Param('id') id: string,
     @Body() updateTaskDto: UpdateTaskDto,
     @Req() req: any,
   ) {
-    return this.taskService.update(id, req.user.userId, updateTaskDto);
+    try {
+      const res = await this.taskService.update(
+        id,
+        req.user.userId,
+        updateTaskDto,
+      );
+      return ResponseHelper.ResponseSuccess(res);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Patch('status/update')
-  updateStatus(@Body() updateStatusDto: UpdateStatusTaskDto, @Req() req: any) {
-    return this.taskService.updateStatus(req.user.userId, updateStatusDto);
+  async updateStatus(
+    @Body() updateStatusDto: UpdateStatusTaskDto,
+    @Req() req: any,
+  ) {
+    try {
+      const res = await this.taskService.updateStatus(
+        req.user.userId,
+        updateStatusDto,
+      );
+      return ResponseHelper.ResponseSuccess(res);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string, @Req() req: any) {
-    return this.taskService.remove(id, req.user.userId);
+  async remove(@Param('id') id: string, @Req() req: any) {
+    try {
+      const res = await this.taskService.remove(id, req.user.userId);
+      return ResponseHelper.ResponseSuccess(res);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 }

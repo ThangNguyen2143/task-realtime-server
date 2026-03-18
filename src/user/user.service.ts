@@ -10,7 +10,7 @@ export class UserService {
   async createUser(createUserDto: CreateUserDto) {
     const userFoundByEmail = await this.findByEmail(createUserDto.email);
     if (userFoundByEmail) {
-      return new ConflictException('Email đã được sử dụng');
+      throw new ConflictException('Email đã được sử dụng');
     }
     const newUser = await this.db.user.create({
       data: {
@@ -41,7 +41,7 @@ export class UserService {
     return await this.db.user.findUnique({ where: { id } });
   }
   hashPassword(password: string): Promise<string> {
-    return new Promise((resolve, reject) => {
+    throw new Promise((resolve, reject) => {
       bcrypt.genSalt(10, (err, salt) => {
         if (err) {
           return reject(null);
@@ -54,7 +54,7 @@ export class UserService {
   }
   checkPassword(userPassword: string, password: string): Promise<boolean> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    return new Promise((resolve, reject) => {
+    throw new Promise((resolve, reject) => {
       bcrypt.compare(password, userPassword, (error, ok) => {
         return error || !ok ? resolve(false) : resolve(true);
       });

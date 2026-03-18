@@ -5,13 +5,16 @@ import {
   HttpStatus,
   Post,
   Request,
+  Res,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiBody, ApiHeaders } from '@nestjs/swagger';
+import { ApiBody } from '@nestjs/swagger';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { SetAccessTokenHeaderInterceptor } from './auth.interceptor';
 import { LoginCredential } from './dto/login-credential.dto';
+import ResponseHelper from 'src/helper/ResponseModel';
+import { Response } from 'express';
 
 @Controller('/api/auth')
 export class AuthController {
@@ -19,27 +22,42 @@ export class AuthController {
   @Post('register')
   @ApiBody({ type: CreateUserDto })
   async createNewUser(@Body() createUserDto: CreateUserDto) {
-    return this.authService.register(createUserDto);
+    try {
+      const res = await this.authService.register(createUserDto);
+      return ResponseHelper.ResponseSuccess(res);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
   @Post('login')
   @UseInterceptors(SetAccessTokenHeaderInterceptor)
   async login(@Body() loginDto: LoginCredential) {
     try {
-      return await this.authService.login(loginDto);
+      const result = await this.authService.login(loginDto);
+      return ResponseHelper.ResponseSuccess(result);
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
-  @ApiHeaders([
-    {
-      name: 'x-refresh-token',
-      description: 'Refresh token',
-      required: true,
-    },
-  ])
   @Post('refresh')
   @UseInterceptors(SetAccessTokenHeaderInterceptor)
   async refreshToken(@Request() req: any) {
-    return await this.authService.refreshToken(req.headers['x-refresh-token']);
+    try {
+      const refreshToken = req.cookies['refresh_token'];
+
+      if (!refreshToken) {
+        throw new HttpException('No refresh token', HttpStatus.UNAUTHORIZED);
+      }
+
+      const res = await this.authService.refreshToken(refreshToken);
+      return ResponseHelper.ResponseSuccess(res);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
+  }
+  @Post('logout')
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie('refresh_token');
+    return { message: 'Logged out' };
   }
 }

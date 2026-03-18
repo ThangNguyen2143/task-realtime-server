@@ -24,14 +24,14 @@ export class AuthService {
   async login(credential: LoginCredential) {
     const user = await this.userService.findByEmail(credential.email);
     if (!user) {
-      return new BadRequestException();
+      throw new BadRequestException();
     }
     const isMatched = await this.userService.checkPassword(
       user.password,
       credential.password,
     );
     if (!isMatched) {
-      return new UnauthorizedException();
+      throw new UnauthorizedException();
     }
     const userData = {
       id: user.id,
@@ -54,7 +54,7 @@ export class AuthService {
       user.id,
     );
     if (!tokenSaved) {
-      return new InternalServerErrorException('Lỗi kết nối server');
+      throw new InternalServerErrorException('Lỗi kết nối server');
     }
     return {
       user: userData,
@@ -66,7 +66,7 @@ export class AuthService {
   async refreshToken(refreshToken: string) {
     const userInfo = await this.decodeToken(refreshToken);
     if (!userInfo || userInfo.isExpired) {
-      return new UnauthorizedException();
+      throw new UnauthorizedException();
     }
     const { valid, revoked } = await this.userService.verifyRefreshToken(
       refreshToken,
@@ -75,7 +75,7 @@ export class AuthService {
     if (!valid || revoked) {
       //Tạm thời chưa phân biệt được lỗi token hết hạn hay token bị revoke,
       // nếu token bị revoke thì xử lý revoke session hiện tại, cảnh báo người dùng và yêu cầu đăng nhập lại
-      return new UnauthorizedException();
+      throw new UnauthorizedException();
     }
     const payload: PayloadTokenDto = {
       jit: crypto.randomUUID(),
@@ -89,7 +89,7 @@ export class AuthService {
       userInfo.user.userId,
     );
     if (!tokenSaved) {
-      return new InternalServerErrorException('Lỗi kết nối server');
+      throw new InternalServerErrorException('Lỗi kết nối server');
     }
     return {
       accessToken: await this.jwtService.signAsync(payload, {
