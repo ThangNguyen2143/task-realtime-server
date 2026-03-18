@@ -1,0 +1,84 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String            @id @default(uuid())
+  email            String            @unique
+  nameDisplay      String
+  password         String
+  status           UserStatus        @default(ACTIVE)
+  createAt         DateTime          @default(now())
+  updateAt         DateTime          @updatedAt
+  refreshTokens    RefreshToken[]
+  ownedWorkspaces  Workspace[]       @relation("WorkspaceOwner")
+  workspaceMembers WorkspaceMember[]
+}
+
+model RefreshToken {
+  id           String    @id @default(uuid())
+  tokenRefresh String    @unique
+  expiredAt    DateTime
+  revokeAt     DateTime?
+  createAt     DateTime  @default(now())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Workspace {
+  id            String            @id @default(uuid())
+  workspaceName String
+  description   String?
+  createAt      DateTime          @default(now())
+  ownerId       String
+  updateAt      DateTime          @updatedAt
+  tasks         Task[]
+  owner         User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members       WorkspaceMember[]
+}
+
+model WorkspaceMember {
+  id          String        @id @default(uuid())
+  userId      String
+  workspaceId String
+  role        WorkspaceRole @default(MEMBER)
+  joinAt      DateTime      @default(now())
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace     @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, workspaceId])
+}
+
+model Task {
+  id          String     @id @default(uuid())
+  title       String
+  description String?
+  createAt    DateTime   @default(now())
+  updateAt    DateTime   @updatedAt
+  version     Int        @default(1)
+  status      TaskStatus @default(TODO)
+  workspaceId String
+  workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  BLOCKED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  DONE
+}
+
+enum WorkspaceRole {
+  OWNER
+  MEMBER
+}
