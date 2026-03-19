@@ -82,12 +82,25 @@ export class WorkspaceService {
     const workspaceFound = await this.db.workspace.findUnique({
       where: { id: workSpaceId },
       include: {
-        tasks: true,
-        members: true,
+        members: {
+          include: {
+            user: true,
+          },
+        },
       },
     });
     if (!workspaceFound) throw new NotFoundException();
-    return workspaceFound;
+    const member = workspaceFound.members.map((mem) => {
+      return {
+        id: mem.id,
+        userId: mem.userId,
+        workspaceId: mem.workspaceId,
+        role: mem.role,
+        joinAt: mem.joinAt,
+        nameDisplay: mem.user.nameDisplay,
+      };
+    });
+    return { ...workspaceFound, members: member };
   }
 
   async update(

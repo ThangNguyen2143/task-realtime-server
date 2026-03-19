@@ -61,9 +61,13 @@ model Task {
   createAt    DateTime   @default(now())
   updateAt    DateTime   @updatedAt
   version     Int        @default(1)
+  order       Int        @default(0)
   status      TaskStatus @default(TODO)
   workspaceId String
   workspace   Workspace  @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@unique([workspaceId, status, order])
+  @@index([workspaceId, status, order])
 }
 
 enum UserStatus {

@@ -41,7 +41,7 @@ export class UserService {
     return await this.db.user.findUnique({ where: { id } });
   }
   hashPassword(password: string): Promise<string> {
-    throw new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       bcrypt.genSalt(10, (err, salt) => {
         if (err) {
           return reject(null);
@@ -54,7 +54,7 @@ export class UserService {
   }
   checkPassword(userPassword: string, password: string): Promise<boolean> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    throw new Promise((resolve, reject) => {
+    return new Promise((resolve, reject) => {
       bcrypt.compare(password, userPassword, (error, ok) => {
         return error || !ok ? resolve(false) : resolve(true);
       });

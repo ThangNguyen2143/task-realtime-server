@@ -1,39 +1,40 @@
 import { Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { RealtimeGateway } from './realtime.gateway';
+import { Task } from 'generated/prisma/client';
 
 @Injectable()
 export class RealtimeService {
   constructor(private readonly realtimeGateway: RealtimeGateway) {}
 
   @OnEvent('task.created')
-  handleTaskCreated(payload: { realtimeId: string; task: any }) {
-    this.realtimeGateway.emitToWorkspace(payload.realtimeId, 'created', {
-      realtimeId: payload.realtimeId,
+  handleTaskCreated(payload: { workspaceId: string; task: Task }) {
+    this.realtimeGateway.emitToWorkspace(payload.workspaceId, 'created', {
+      workspaceId: payload.workspaceId,
       task: payload.task,
     });
   }
 
   @OnEvent('task.updated')
-  handleTaskUpdated(payload: { realtimeId: string; task: any }) {
-    this.realtimeGateway.emitToWorkspace(payload.realtimeId, 'updated', {
-      realtimeId: payload.realtimeId,
+  handleTaskUpdated(payload: { workspaceId: string; task: Task }) {
+    this.realtimeGateway.emitToWorkspace(payload.workspaceId, 'updated', {
+      workspaceId: payload.workspaceId,
       task: payload.task,
     });
   }
 
   @OnEvent('task.status-updated')
-  handleTaskStatusUpdated(payload: { realtimeId: string; task: any }) {
-    this.realtimeGateway.emitToWorkspace(payload.realtimeId, 'statusUpdate', {
-      realtimeId: payload.realtimeId,
-      task: payload.task,
+  handleTaskStatusUpdated(payload: { workspaceId: string; tasks: Task[] }) {
+    this.realtimeGateway.emitToWorkspace(payload.workspaceId, 'statusUpdate', {
+      workspaceId: payload.workspaceId,
+      tasks: payload.tasks,
     });
   }
 
   @OnEvent('task.deleted')
-  handleTaskDeleted(payload: { realtimeId: string; taskId: string }) {
-    this.realtimeGateway.emitToWorkspace(payload.realtimeId, 'delete', {
-      realtimeId: payload.realtimeId,
+  handleTaskDeleted(payload: { workspaceId: string; taskId: string }) {
+    this.realtimeGateway.emitToWorkspace(payload.workspaceId, 'delete', {
+      workspaceId: payload.workspaceId,
       taskId: payload.taskId,
     });
   }

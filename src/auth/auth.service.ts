@@ -45,21 +45,18 @@ export class AuthService {
     };
     const tokenData = await this.generateAuthToken(payloadToken);
     // Tính thời gian hết hạn của refresh token (7 ngày): theo định dạng dd/MM/yyyy HH:mm:ss
-    const expireDate = new Date(
-      new Date().setTime(new Date().getTime() + this.TIME_EXPIRE_REFRESH),
-    ).toDateString();
     const tokenSaved = await this.userService.saveRefreshToken(
       tokenData.refreshToken,
       payloadToken.jit,
       user.id,
     );
-    if (!tokenSaved) {
+    if (!tokenSaved[0]) {
       throw new InternalServerErrorException('Lỗi kết nối server');
     }
     return {
       user: userData,
       refreshToken: tokenData.refreshToken,
-      expiresIn: expireDate,
+      expiresIn: tokenSaved[1],
       accessToken: tokenData.accessToken,
     };
   }
