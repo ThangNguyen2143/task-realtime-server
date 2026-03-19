@@ -17,6 +17,7 @@ import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { JwtGuard } from 'src/auth/guards/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import ResponseHelper from 'src/helper/ResponseModel';
+import { InviteMemberDto } from './dto/invite-member.dto';
 
 @Controller('/api/workspace')
 @ApiBearerAuth('access-token')
@@ -39,7 +40,10 @@ export class WorkspaceController {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
-
+  @Post('invite-member')
+  async inviteMember(@Body() dto: InviteMemberDto, @Req() req: any) {
+    return this.workspaceService.inviteMember(req.user.id, dto);
+  }
   @Get()
   async findAll(@Req() req: any) {
     try {

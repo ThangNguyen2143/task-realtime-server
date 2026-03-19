@@ -2,12 +2,14 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
 } from '@nestjs/common';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { DatabaseService } from 'src/database/database.service';
 import { PayloadTokenDto } from 'src/auth/dto/payload-token.dto';
 import { WorkspaceRole } from 'generated/prisma/enums';
+import { InviteMemberDto } from './dto/invite-member.dto';
 
 @Injectable()
 export class WorkspaceService {
@@ -102,7 +104,46 @@ export class WorkspaceService {
     });
     return { ...workspaceFound, members: member };
   }
+  async inviteMember(currentUserId: string, dto: InviteMemberDto) {
+    const workspace = await this.db.workspace.findUnique({
+      where: { id: dto.workspaceId },
+    });
 
+    if (!workspace) {
+      throw new NotFoundException('Workspace không tồn tại');
+    }
+
+    const user = await this.db.user.findUnique({
+      where: { email: dto.email },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Người dùng không tồn tại');
+    }
+
+    const existed = await this.db.workspaceMember.findUnique({
+      where: {
+        userId_workspaceId: {
+          userId: user.id,
+          workspaceId: dto.workspaceId,
+        },
+      },
+    });
+
+    if (existed) {
+      throw new BadRequestException(
+        'Người dùng đã là thành viên của workspace',
+      );
+    }
+
+    return this.db.workspaceMember.create({
+      data: {
+        userId: user.id,
+        workspaceId: dto.workspaceId,
+        role: WorkspaceRole.MEMBER,
+      },
+    });
+  }
   async update(
     id: string,
     userId: string,
