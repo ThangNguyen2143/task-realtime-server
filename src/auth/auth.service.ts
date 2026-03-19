@@ -60,6 +60,9 @@ export class AuthService {
       accessToken: tokenData.accessToken,
     };
   }
+  async getProfile(userId: string) {
+    return this.userService.findById(userId);
+  }
   async refreshToken(refreshToken: string) {
     const userInfo = await this.decodeToken(refreshToken);
     if (!userInfo || userInfo.isExpired) {

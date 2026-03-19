@@ -1,20 +1,23 @@
 import {
   Body,
   Controller,
+  Get,
   HttpException,
   HttpStatus,
   Post,
   Request,
   Res,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { ApiBody } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { SetAccessTokenHeaderInterceptor } from './auth.interceptor';
 import { LoginCredential } from './dto/login-credential.dto';
 import ResponseHelper from 'src/helper/ResponseModel';
 import { Response } from 'express';
+import { JwtGuard } from './guards/jwt.guard';
 
 @Controller('/api/auth')
 export class AuthController {
@@ -59,5 +62,16 @@ export class AuthController {
   logout(@Res({ passthrough: true }) res: Response) {
     res.clearCookie('refresh_token');
     return { message: 'Logged out' };
+  }
+  @ApiBearerAuth('access-token')
+  @UseGuards(JwtGuard)
+  @Get('me')
+  async findOne(@Request() req: any) {
+    try {
+      const res = await this.authService.getProfile(req.user.userId);
+      return ResponseHelper.ResponseSuccess(res);
+    } catch (error) {
+      throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
+    }
   }
 }
