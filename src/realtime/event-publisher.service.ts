@@ -1,5 +1,6 @@
-import EventEmitter2 from 'eventemitter2';
-
+import { Injectable } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+@Injectable()
 export class EventPublisherService {
   constructor(private readonly eventEmitter: EventEmitter2) {}
 

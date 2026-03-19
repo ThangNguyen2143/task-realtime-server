@@ -3,16 +3,16 @@ import { RealtimeService } from './realtime.service';
 import { RealtimeGateway } from './realtime.gateway';
 import { EventPublisherService } from './event-publisher.service';
 import { PermissionService } from 'src/permission/permission.service';
-import { DatabaseService } from 'src/database/database.service';
+import { DatabaseModule } from 'src/database/database.module';
 
 @Module({
-  imports: [EventPublisherService],
+  imports: [DatabaseModule],
   providers: [
     RealtimeGateway,
     RealtimeService,
     EventPublisherService,
     PermissionService,
-    DatabaseService,
   ],
+  exports: [RealtimeGateway, RealtimeService, EventPublisherService],
 })
 export class RealtimeModule {}

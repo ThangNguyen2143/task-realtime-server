@@ -10,10 +10,12 @@ import { RealtimeModule } from './realtime/realtime.module';
 import { PermissionService } from './permission/permission.service';
 import { JwtModule } from '@nestjs/jwt';
 import { PermissionModule } from './permission/permission.module';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 
 @Module({
   imports: [
     AuthModule,
+    EventEmitterModule.forRoot(),
     JwtModule.register({
       signOptions: { expiresIn: '1h' },
     }),

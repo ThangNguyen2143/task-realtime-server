@@ -24,7 +24,7 @@ export class RealtimeService {
   }
 
   @OnEvent('task.status-updated')
-  handleTaskStatusUpdated(payload: { workspaceId: string; tasks: Task[] }) {
+  handleTaskStatusUpdated(payload: { workspaceId: string; tasks: any[] }) {
     this.realtimeGateway.emitToWorkspace(payload.workspaceId, 'statusUpdate', {
       workspaceId: payload.workspaceId,
       tasks: payload.tasks,

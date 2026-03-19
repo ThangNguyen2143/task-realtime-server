@@ -443,7 +443,7 @@ export class TaskService {
     });
     this.eventPublisher.publish('task.status-updated', {
       workspaceId: task.workspaceId,
-      task: result.affectedTasks,
+      tasks: result.affectedTasks,
     });
     return result.updatedTask;
   }
