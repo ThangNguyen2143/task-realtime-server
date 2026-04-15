@@ -333,36 +333,39 @@ export class TaskService {
           affectedTasks,
         };
       }
-
-      await tx.task.updateMany({
-        where: {
-          workspaceId: task.workspaceId,
-          status: oldStatus,
-          order: {
-            gt: oldOrder,
-          },
-        },
-        data: {
-          order: {
-            decrement: 1,
-          },
-        },
+      // Khi chuyển sang cột khác, đặt order của task đang cập nhật tạm thời về -1 để tránh xung đột unique constraint
+      await tx.task.update({
+        where: { id: task.id },
+        data: { order: -1 },
       });
-
-      await tx.task.updateMany({
-        where: {
-          workspaceId: task.workspaceId,
-          status: newStatus,
-          order: {
-            gte: newOrder,
-          },
-        },
-        data: {
-          order: {
-            increment: 1,
-          },
-        },
-      });
+      await tx.$executeRawUnsafe(
+        `
+        UPDATE "Task"
+        SET "order" = "order" - 1
+        WHERE "workspaceId" = $1
+          AND "status" = $2
+          AND "order" > $3
+      `,
+        task.workspaceId,
+        oldStatus,
+        oldOrder,
+      );
+      await tx.$executeRawUnsafe(
+        `
+  UPDATE "Task"
+  SET "order" = "order" + 1
+  WHERE id IN (
+    SELECT id FROM "Task"
+    WHERE "workspaceId" = $1
+      AND "status" = $2
+      AND "order" >= $3
+    ORDER BY "order" DESC
+  )
+`,
+        task.workspaceId,
+        newStatus,
+        newOrder,
+      );
 
       const updatedTask = await tx.task.update({
         where: { id: task.id },
