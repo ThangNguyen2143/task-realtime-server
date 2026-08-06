@@ -16,8 +16,8 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { UpdateStatusTaskDto } from './dto/update-status.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { UseGuards } from '@nestjs/common';
-import { JwtGuard } from 'src/auth/guards/jwt.guard';
-import ResponseHelper from 'src/helper/ResponseModel';
+import { JwtGuard } from '../auth/guards/jwt.guard';
+import ResponseHelper from '../helper/ResponseModel';
 
 @Controller('/api/task')
 @ApiBearerAuth('access-token')
@@ -30,7 +30,7 @@ export class TaskController {
     try {
       const res = await this.taskService.create(createTaskDto, req.user.userId);
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -41,7 +41,7 @@ export class TaskController {
     try {
       const res = await this.taskService.findAll(workspaceId, req.user.userId);
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -51,7 +51,7 @@ export class TaskController {
     try {
       const res = await this.taskService.findOne(id, req.user.userId);
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -69,7 +69,7 @@ export class TaskController {
         updateTaskDto,
       );
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -85,7 +85,7 @@ export class TaskController {
         updateStatusDto,
       );
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -95,7 +95,7 @@ export class TaskController {
     try {
       const res = await this.taskService.remove(id, req.user.userId);
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }

@@ -2,9 +2,9 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { UpdateStatusTaskDto } from './dto/update-status.dto';
-import { DatabaseService } from 'src/database/database.service';
-import { PermissionService } from 'src/permission/permission.service';
-import { EventPublisherService } from 'src/realtime/event-publisher.service';
+import { DatabaseService } from '../database/database.service';
+import { PermissionService } from '../permission/permission.service';
+import { EventPublisherService } from '../realtime/event-publisher.service';
 import { TaskStatus } from 'generated/prisma/enums';
 
 @Injectable()

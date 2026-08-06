@@ -12,10 +12,10 @@ import {
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { ApiBearerAuth, ApiBody } from '@nestjs/swagger';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { CreateUserDto } from '../user/dto/create-user.dto';
 import { SetAccessTokenHeaderInterceptor } from './auth.interceptor';
 import { LoginCredential } from './dto/login-credential.dto';
-import ResponseHelper from 'src/helper/ResponseModel';
+import ResponseHelper from '../helper/ResponseModel';
 import { Response } from 'express';
 import { JwtGuard } from './guards/jwt.guard';
 
@@ -28,7 +28,7 @@ export class AuthController {
     try {
       const res = await this.authService.register(createUserDto);
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -38,7 +38,7 @@ export class AuthController {
     try {
       const result = await this.authService.login(loginDto);
       return ResponseHelper.ResponseSuccess(result);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -54,7 +54,7 @@ export class AuthController {
 
       const res = await this.authService.refreshToken(refreshToken);
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -70,7 +70,7 @@ export class AuthController {
     try {
       const res = await this.authService.getProfile(req.user.userId);
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }

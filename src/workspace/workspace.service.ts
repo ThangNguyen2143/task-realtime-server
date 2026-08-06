@@ -6,8 +6,8 @@ import {
 } from '@nestjs/common';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
-import { DatabaseService } from 'src/database/database.service';
-import { PayloadTokenDto } from 'src/auth/dto/payload-token.dto';
+import { DatabaseService } from '../database/database.service';
+import { PayloadTokenDto } from '../auth/dto/payload-token.dto';
 import { WorkspaceRole } from 'generated/prisma/enums';
 import { InviteMemberDto } from './dto/invite-member.dto';
 

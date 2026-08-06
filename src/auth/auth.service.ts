@@ -5,8 +5,8 @@ import {
   InternalServerErrorException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
-import { UserService } from 'src/user/user.service';
+import { CreateUserDto } from '../user/dto/create-user.dto';
+import { UserService } from '../user/user.service';
 import { LoginCredential } from './dto/login-credential.dto';
 import { PayloadTokenDto } from './dto/payload-token.dto';
 

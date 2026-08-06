@@ -14,9 +14,9 @@ import {
 import { WorkspaceService } from './workspace.service';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
-import { JwtGuard } from 'src/auth/guards/jwt.guard';
+import { JwtGuard } from '../auth/guards/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import ResponseHelper from 'src/helper/ResponseModel';
+import ResponseHelper from '../helper/ResponseModel';
 import { InviteMemberDto } from './dto/invite-member.dto';
 
 @Controller('/api/workspace')
@@ -36,7 +36,7 @@ export class WorkspaceController {
         req['user'],
       );
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -49,7 +49,7 @@ export class WorkspaceController {
     try {
       const res = await this.workspaceService.findAll(req['user'].userId);
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -59,7 +59,7 @@ export class WorkspaceController {
     try {
       const res = await this.workspaceService.findOne(id, req['user'].userId);
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -77,7 +77,7 @@ export class WorkspaceController {
         updateWorkspaceDto,
       );
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
@@ -87,7 +87,7 @@ export class WorkspaceController {
     try {
       const res = await this.workspaceService.remove(id, req['user'].userId);
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }

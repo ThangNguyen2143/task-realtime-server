@@ -7,7 +7,7 @@ import {
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
 import { ForbiddenException } from '@nestjs/common';
-import { PermissionService } from 'src/permission/permission.service';
+import { PermissionService } from '../permission/permission.service';
 
 @WebSocketGateway({
   cors: true,

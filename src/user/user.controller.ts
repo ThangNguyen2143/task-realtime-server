@@ -7,9 +7,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { JwtGuard } from 'src/auth/guards/jwt.guard';
+import { JwtGuard } from '../auth/guards/jwt.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import ResponseHelper from 'src/helper/ResponseModel';
+import ResponseHelper from '../helper/ResponseModel';
 
 @Controller('/api/user')
 @ApiBearerAuth('access-token')
@@ -21,7 +21,7 @@ export class UserController {
     try {
       const res = await this.userService.findById(id);
       return ResponseHelper.ResponseSuccess(res);
-    } catch (error) {
+    } catch (error: any) {
       throw new HttpException(error.message, HttpStatus.BAD_REQUEST);
     }
   }
