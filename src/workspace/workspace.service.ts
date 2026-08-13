@@ -79,7 +79,9 @@ export class WorkspaceService {
   async findOne(workSpaceId: string, currentUserId: string) {
     const isMember = await this.checkMember(currentUserId, workSpaceId);
     if (!isMember[0]) {
-      throw new NotFoundException();
+      throw new NotFoundException(
+        'Bạn không phải là thành viên của workspace này',
+      );
     }
     const workspaceFound = await this.db.workspace.findUnique({
       where: { id: workSpaceId },
@@ -91,7 +93,7 @@ export class WorkspaceService {
         },
       },
     });
-    if (!workspaceFound) throw new NotFoundException();
+    if (!workspaceFound) throw new NotFoundException('Workspace không tồn tại');
     const member = workspaceFound.members.map((mem) => {
       return {
         id: mem.id,
@@ -112,7 +114,12 @@ export class WorkspaceService {
     if (!workspace) {
       throw new NotFoundException('Workspace không tồn tại');
     }
-
+    const [isMember] = await this.checkMember(currentUserId, dto.workspaceId);
+    if (!isMember) {
+      throw new ForbiddenException(
+        'Bạn không phải là thành viên của workspace',
+      );
+    }
     const user = await this.db.user.findUnique({
       where: { email: dto.email },
     });

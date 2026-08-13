@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  InternalServerErrorException,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { UpdateStatusTaskDto } from './dto/update-status.dto';
@@ -6,6 +10,7 @@ import { DatabaseService } from '../database/database.service';
 import { PermissionService } from '../permission/permission.service';
 import { EventPublisherService } from '../realtime/event-publisher.service';
 import { TaskStatus } from 'generated/prisma/enums';
+import { Prisma } from 'generated/prisma/client';
 
 @Injectable()
 export class TaskService {
@@ -22,18 +27,23 @@ export class TaskService {
     );
 
     if (!member.isMember) {
-      throw new NotFoundException('Workspace not found');
+      throw new NotFoundException('Không có quyền truy cập workspace này');
     }
 
-    for (let attempt = 0; attempt < 3; attempt++) {
-      try {
-        const task = await this.db.$transaction(async (tx) => {
-          const nextOrder = await tx.task.count({
+    const task = await this.retryTransaction(() =>
+      this.db.$transaction(
+        async (tx) => {
+          const orderResult = await tx.task.aggregate({
             where: {
               workspaceId: createTaskDto.workspaceId,
               status: TaskStatus.TODO,
             },
+            _max: {
+              order: true,
+            },
           });
+
+          const nextOrder = (orderResult._max.order ?? -1) + 1;
 
           return tx.task.create({
             data: {
@@ -55,21 +65,19 @@ export class TaskService {
               updateAt: true,
             },
           });
-        });
+        },
+        {
+          isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+        },
+      ),
+    );
 
-        this.eventPublisher.publish('task.created', {
-          workspaceId: task.workspaceId,
-          task,
-        });
+    this.eventPublisher.publish('task.created', {
+      workspaceId: task.workspaceId,
+      task,
+    });
 
-        return task;
-      } catch (error: any) {
-        if (error?.code === 'P2002' && attempt < 2) {
-          continue;
-        }
-        throw error;
-      }
-    }
+    return task;
   }
 
   async findAll(workspaceId: string, userId: string) {
@@ -79,7 +87,7 @@ export class TaskService {
     );
 
     if (!member.isMember) {
-      throw new NotFoundException('Workspace not found');
+      throw new NotFoundException('Không có quyền truy cập workspace này');
     }
 
     return this.db.task.findMany({
@@ -125,7 +133,9 @@ export class TaskService {
     });
 
     if (!task) {
-      throw new NotFoundException('Task not found');
+      throw new NotFoundException(
+        'Không tìm thấy nhiệm vụ hoặc không có quyền truy cập',
+      );
     }
 
     return task;
@@ -145,7 +155,9 @@ export class TaskService {
     });
 
     if (!task) {
-      throw new NotFoundException('Task not found');
+      throw new NotFoundException(
+        'Không tìm thấy nhiệm vụ hoặc không có quyền truy cập',
+      );
     }
 
     const updatedTask = await this.db.task.update({
@@ -181,7 +193,9 @@ export class TaskService {
     });
 
     if (!task) {
-      throw new NotFoundException('Task not found');
+      throw new NotFoundException(
+        'Không có quyền truy cập hoặc không tìm thấy nhiệm vụ',
+      );
     }
 
     const member = await this.permissionService.getWorkspaceRole(
@@ -190,7 +204,9 @@ export class TaskService {
     );
 
     if (!member.isMember) {
-      throw new NotFoundException('Task not found');
+      throw new NotFoundException(
+        'Không có quyền truy cập hoặc không tìm thấy nhiệm vụ',
+      );
     }
     const result = await this.db.$transaction(async (tx) => {
       const oldStatus = task.status;
@@ -459,11 +475,15 @@ export class TaskService {
         id: true,
         title: true,
         workspaceId: true,
+        order: true,
+        status: true,
       },
     });
 
     if (!task) {
-      throw new NotFoundException('Task not found');
+      throw new NotFoundException(
+        'Không tìm thấy nhiệm vụ hoặc không có quyền truy cập',
+      );
     }
 
     const member = await this.permissionService.getWorkspaceRole(
@@ -472,20 +492,85 @@ export class TaskService {
     );
 
     if (!member.isMember) {
-      throw new NotFoundException('Task not found');
+      throw new NotFoundException(
+        'Không tìm thấy nhiệm vụ hoặc không có quyền truy cập',
+      );
     }
-    const deletedTask = await this.db.task.delete({
-      where: { id: taskId },
-      select: {
-        id: true,
-        title: true,
-        workspaceId: true,
+    const deletedTask = await this.db.$transaction(
+      async (tx) => {
+        const task = await tx.task.findUnique({
+          where: {
+            id: taskId,
+          },
+          select: {
+            id: true,
+            title: true,
+            workspaceId: true,
+            status: true,
+            order: true,
+          },
+        });
+
+        if (!task) {
+          throw new NotFoundException(
+            'Không tìm thấy nhiệm vụ hoặc không có quyền truy cập',
+          );
+        }
+
+        // permission check
+
+        await tx.task.delete({
+          where: {
+            id: task.id,
+          },
+        });
+
+        await tx.task.updateMany({
+          where: {
+            workspaceId: task.workspaceId,
+            status: task.status,
+            order: {
+              gt: task.order,
+            },
+          },
+          data: {
+            order: {
+              decrement: 1,
+            },
+          },
+        });
+
+        return task;
       },
-    });
+      {
+        isolationLevel: Prisma.TransactionIsolationLevel.Serializable,
+      },
+    );
     this.eventPublisher.publish('task.deleted', {
       workspaceId: deletedTask.workspaceId,
       taskId: deletedTask.id,
     });
     return deletedTask;
+  }
+  private async retryTransaction<T>(operation: () => Promise<T>): Promise<T> {
+    const MAX_RETRIES = 5;
+
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        const retryable =
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          (error.code === 'P2034' || error.code === 'P2002');
+
+        if (retryable && attempt < MAX_RETRIES - 1) {
+          continue;
+        }
+
+        throw error;
+      }
+    }
+
+    throw new InternalServerErrorException('Không thể hoàn thành transaction');
   }
 }

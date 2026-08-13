@@ -21,8 +21,8 @@ export class SetAccessTokenHeaderInterceptor implements NestInterceptor {
             `Bearer ${data.value.accessToken}`,
           );
         }
-        if (data?.refreshToken) {
-          response.cookie('refresh_token', data.refreshToken, {
+        if (data?.value?.refreshToken) {
+          response.cookie('refresh_token', data.value.refreshToken, {
             httpOnly: true,
             secure: false,
             sameSite: 'none',

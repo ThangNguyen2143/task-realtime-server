@@ -4,9 +4,9 @@ import {
   MessageBody,
   WebSocketServer,
   ConnectedSocket,
+  WsException,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { ForbiddenException } from '@nestjs/common';
 import { PermissionService } from '../permission/permission.service';
 
 @WebSocketGateway({
@@ -22,16 +22,22 @@ export class RealtimeGateway {
   // Client join vào workspace (room)
   @SubscribeMessage('join-room')
   async handleJoinRoom(
-    @MessageBody() body: { workspaceId: string; userId: string },
+    @MessageBody() body: { workspaceId: string; accessToken: string },
     @ConnectedSocket() client: Socket,
   ) {
+    const userId = await this.permissionService.checkAccessTokenToGetUserId(
+      body.accessToken,
+    );
     const isMember = await this.permissionService.isWorkspaceMember(
-      body.userId,
+      userId,
       body.workspaceId,
     );
 
     if (!isMember) {
-      throw new ForbiddenException('You are not a member of this workspace');
+      throw new WsException({
+        code: 'FORBIDDEN',
+        message: 'You are not a member of this workspace',
+      });
     }
 
     const room = this.getWorkspaceRoom(body.workspaceId);

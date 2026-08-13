@@ -42,7 +42,7 @@ export class WorkspaceController {
   }
   @Post('invite-member')
   async inviteMember(@Body() dto: InviteMemberDto, @Req() req: any) {
-    return this.workspaceService.inviteMember(req.user.id, dto);
+    return this.workspaceService.inviteMember(req.user.userId, dto);
   }
   @Get()
   async findAll(@Req() req: any) {

@@ -24,14 +24,14 @@ export class AuthService {
   async login(credential: LoginCredential) {
     const user = await this.userService.findByEmail(credential.email);
     if (!user) {
-      throw new BadRequestException();
+      throw new BadRequestException('Email hoặc mật khẩu không đúng');
     }
     const isMatched = await this.userService.checkPassword(
       user.password,
       credential.password,
     );
     if (!isMatched) {
-      throw new UnauthorizedException();
+      throw new UnauthorizedException('Email hoặc mật khẩu không đúng');
     }
     const userData = {
       id: user.id,

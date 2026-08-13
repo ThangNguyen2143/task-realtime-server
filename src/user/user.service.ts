@@ -38,7 +38,10 @@ export class UserService {
     }
   }
   async findById(id: string) {
-    return await this.db.user.findUnique({ where: { id } });
+    return await this.db.user.findUnique({
+      where: { id },
+      select: { id: true, email: true, nameDisplay: true },
+    });
   }
   hashPassword(password: string): Promise<string> {
     return new Promise((resolve, reject) => {
